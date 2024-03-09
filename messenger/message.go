@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/jeff-rdg/discord_webhook/color"
-	"github.com/jeff-rdg/discord_webhook/emoji"
+	"github.com/Jeff-Rdg/webhook_discord/color"
+	"github.com/Jeff-Rdg/webhook_discord/emoji"
 	"io"
 	"log"
 
