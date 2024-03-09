@@ -1,4 +1,4 @@
-module github.com/jeff-rdg/webhook_discord
+module github.com/jeff-rdg/discord_webhook
 
 go 1.21.8
 
