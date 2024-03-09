@@ -15,7 +15,7 @@ import (
 )
 
 type message struct {
-	Content     string   `json:"content"` // enviroment
+	Content     string   `json:"content"`
 	Embeds      []embeds `json:"embeds"`
 	Attachments []string `json:"attachments"`
 }
@@ -30,7 +30,7 @@ type embeds struct {
 }
 
 type author struct {
-	Name string `json:"name"` //application name
+	Name string `json:"name"`
 }
 
 func createMessage(logger SenderLog) *message {
