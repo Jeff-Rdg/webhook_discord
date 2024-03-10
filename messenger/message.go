@@ -10,10 +10,10 @@ import (
 	"log"
 
 	"net/http"
-	"os"
 	"time"
 )
 
+// message JSON sending to Discord
 type message struct {
 	Content     string   `json:"content"`
 	Embeds      []embeds `json:"embeds"`
@@ -35,7 +35,7 @@ type author struct {
 
 func createMessage(logger SenderLog) *message {
 
-	req, _ := json.Marshal(logger.Request)
+	req, _ := json.Marshal(logger.Response)
 
 	embeds := []embeds{{
 		Title:       logger.Uri,
@@ -43,25 +43,23 @@ func createMessage(logger SenderLog) *message {
 		Url:         logger.UriUrl,
 		Color:       color.RandomColor(),
 		Author: author{
-			Name: logger.Application,
+			Name: logger.ApplicationName,
 		},
 		Timestamp: time.Now(),
 	}}
 
 	return &message{
-		Content:     fmt.Sprint(emoji.Warning, " - ", logger.Enviroment),
+		Content:     fmt.Sprint(emoji.Warning, " ", logger.ApplicationName, " - ", logger.Enviroment),
 		Embeds:      embeds,
 		Attachments: nil,
 	}
 }
 
-func (m *message) sendToDiscord() {
+func (m *message) sendToDiscord(url string) {
 	body, err := json.Marshal(m)
 	if err != nil {
 		log.Fatalln("Erro ao serializar a mensagem:", err)
 	}
-
-	url := os.Getenv("WEBHOOK_URL")
 
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
 	if err != nil {
@@ -70,36 +68,30 @@ func (m *message) sendToDiscord() {
 
 	defer resp.Body.Close()
 
-	result, err := io.ReadAll(resp.Body)
+	_, err = io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalln("Erro ao ler a resposta do servidor:", err)
 	}
 
-	log.Printf("Status Code: %d", resp.StatusCode)
-	log.Printf("Resposta do servidor: %s", result)
-}
-
-type SenderLog struct {
-	Enviroment  string      `json:"enviroment"`
-	Request     interface{} `json:"request"`
-	Uri         string      `json:"uri"`
-	UriUrl      string      `json:"uri_url"`
-	Application string      `json:"application"`
-}
-
-func newLogger(env, uri, uriUrl, app string, req interface{}) SenderLog {
-	return SenderLog{
-		Enviroment:  env,
-		Request:     req,
-		Uri:         uri,
-		UriUrl:      uriUrl,
-		Application: app,
+	if resp.StatusCode >= 300 {
+		log.Println("Houve um erro ao conectar com servidor")
 	}
+
+	log.Printf("Status Code: %d", resp.StatusCode)
 }
 
-func SendLog(env, uri, uriUrl, app string, req interface{}) {
-	logger := newLogger(env, uri, uriUrl, app, req)
+// SenderLog Json to prepare to sending
+type SenderLog struct {
+	Enviroment      string      `json:"enviroment"`
+	Response        interface{} `json:"response"`
+	Uri             string      `json:"uri"`
+	UriUrl          string      `json:"uri_url"`
+	ApplicationName string      `json:"application_name"`
+	WebhookUrl      string      `json:"webhook_url"`
+}
 
+// SendLog method to sending to Discord Webhook
+func SendLog(logger SenderLog) {
 	messenger := createMessage(logger)
-	messenger.sendToDiscord()
+	messenger.sendToDiscord(logger.WebhookUrl)
 }
